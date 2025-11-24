@@ -1,0 +1,50 @@
+package com.moneymate.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true)
+    private String username;  // 아이디
+
+    private String password;  // 비밀번호
+    private String name;      // 이름
+    private int age;          // 나이
+    private String gender;    // 성별
+
+    // ⭐ 기본 생성자 필수!!
+    public User() {}
+
+    // ⭐ 모든 필드 생성자 (선택)
+    public User(String username, String password, String name, int age, String gender) {
+        this.username = username;
+        this.password = password;
+        this.name = name;
+        this.age = age;
+        this.gender = gender;
+    }
+
+    // ⭐ Getter/Setter 수동 작성
+    public Long getId() { return id; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public int getAge() { return age; }
+    public void setAge(int age) { this.age = age; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+}
