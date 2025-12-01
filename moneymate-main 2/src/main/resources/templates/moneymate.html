@@ -696,7 +696,7 @@ function formatCurrency(v){
 }
 
 /* ===== 페이지 전환 ===== */
-const pages = ['page-auth','page-main','page-budget','page-expense','page-calendar','page-stats','page-dog'];
+const pages = ['page-auth','page-main','page-budget','page-expense','page-calendar','page-stats','page-dog','page-strategy'];
 function go(id){
   pages.forEach(pid=>{
     const el = document.getElementById(pid);
@@ -1567,6 +1567,7 @@ window.addEventListener('load',()=>{
   $('#rateLabel').textContent = `1 AUD = ${rate} KRW`;
 });
 /* ===== AI 소비전략 ===== */
+/* ===== AI 소비전략 ===== */
 $('#btn-generate-strategy').addEventListener('click', async () => {
   if (!currentUser) {
     showToast('먼저 로그인해주세요.');
@@ -1579,38 +1580,53 @@ $('#btn-generate-strategy').addEventListener('click', async () => {
 
   const btn = $('#btn-generate-strategy');
   const resultSection = $('#strategy-result');
+  const contentDiv = $('#ai-strategy-content');
   
   btn.disabled = true;
-  btn.textContent = '🤖 AI가 분석 중입니다...';
-  resultSection.style.display = 'none';
+  btn.textContent = '⏳ AI가 분석 중입니다...';
+  resultSection.style.display = 'block';
+  contentDiv.textContent = '🤖 Hugging Face AI가 당신의 소비 패턴을 분석하고 있어요...\n\n첫 호출은 모델 로딩으로 20-30초 걸릴 수 있습니다.\n잠시만 기다려주세요!';
 
   try {
+    // 분석 데이터 미리 표시
     updateStrategyAnalysis();
 
     const [year, month] = currentYearMonth.split('-').map(Number);
+    
+    console.log('API 호출:', `/api/strategy/${currentUser.id}/${year}/${month}?budget=${currentBudgetTotal}`);
+    
     const response = await fetch(
-      `/api/strategy/${currentUser.id}/${year}/${month}?budget=${currentBudgetTotal}`
+      `/api/strategy/${currentUser.id}/${year}/${month}?budget=${currentBudgetTotal}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
 
     if (!response.ok) {
-      throw new Error('AI 전략 생성 실패');
+      throw new Error(`서버 오류: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('받은 데이터:', data);
     
-    resultSection.style.display = 'block';
-    $('#ai-strategy-content').textContent = data.strategy;
+    // AI 전략 표시
+    contentDiv.textContent = data.strategy || '전략을 생성할 수 없습니다.';
     
-    showToast('AI 전략이 생성되었습니다!');
+    showToast('✅ AI 전략이 생성되었습니다!');
 
   } catch (error) {
     console.error('AI 전략 생성 오류:', error);
-    showToast('AI 전략 생성에 실패했습니다.');
-    $('#ai-strategy-content').textContent = 
-      '⚠️ 전략 생성에 실패했습니다.\n\n' +
-      '✅ 지출 내역을 꾸준히 기록하세요.\n' +
-      '💡 예산을 설정하고 관리해보세요.';
-    resultSection.style.display = 'block';
+    showToast('❌ AI 전략 생성에 실패했습니다.');
+    
+    // 기본 전략 표시
+    contentDiv.textContent = 
+      '⚠️ AI 전략 생성에 실패했습니다.\n\n' +
+      '✅ 지출 내역을 꾸준히 기록하세요.\n\n' +
+      '💡 예산을 설정하고 관리해보세요.\n\n' +
+      '⚠️ 고정 지출과 변동 지출을 구분하면 좋아요.';
   } finally {
     btn.disabled = false;
     btn.textContent = '🤖 AI 전략 재생성하기';
